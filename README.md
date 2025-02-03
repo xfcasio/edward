@@ -4,9 +4,9 @@
 
 <h1 align='center'> Linux Eden Bot </h1>
 
-<p align="center">
+<div align="center">
  <h3> The Discord bot I wrote to manage the <a href="https://discord.gg/NqtU7fdVeu">Linux Eden Discord</a> server. </h2>
-</p>
+</div>
 
 
 <h3> How can I use it for my server? </h2>
