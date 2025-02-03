@@ -5,7 +5,7 @@
 <h1 align='center'> Linux Eden Bot </h1>
 
 <p align="center">
- <h2> The Discord bot I wrote to manage the <a href="https://discord.gg/NqtU7fdVeu">Linux Eden Discord</a> server. </h2>
+ <h3> The Discord bot I wrote to manage the <a href="https://discord.gg/NqtU7fdVeu">Linux Eden Discord</a> server. </h2>
 </p>
 
 
