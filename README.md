@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="./assets/rhbot.png" width=50, height=50 />
+    <img src="./assets/rhbot.png" width=100, height=100 />
 </div>
 
 <h1 align='center'> Linux Eden Bot </h1>
