@@ -17,3 +17,11 @@ lto = false
 panic = 'unwind'       
 incremental = true     
 codegen-units = 256    
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = true
+panic = "abort"
+strip = true
+incremental = false
