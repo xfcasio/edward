@@ -1,6 +1,6 @@
 use obfstr::obfstr;
 use serenity::{
-    model::{ channel::Message, gateway::Ready },
+    model::{channel::Message, gateway::Ready, id::EmojiId},
     gateway::ActivityData,
     all::ReactionType,
     async_trait,
@@ -35,9 +35,7 @@ impl EventHandler for Handler {
 
         if SHOWCASE_CHANNELS.contains(&msg.channel_id.get()) {
             if msg.attachments.len() > 0 || msg.embeds.len() > 0 || msg.content.contains("https://") {
-                if let Err(why) = msg.react(&ctx.http, ReactionType::Unicode(String::from("💙"))).await {
-                    eprintln!("Error reacting to message by {}: {why:?}", msg.author.name);
-                }
+                add_vote_reactions(&ctx, &msg).await;
             } else {
                 if let Err(why) = msg.delete(&ctx.http).await {
                     eprintln!("Error deleting message by {}: {why:?}", msg.author.name);
@@ -45,10 +43,26 @@ impl EventHandler for Handler {
             }
         } else if msg.channel_id.get() == 660353693283123231 /* memes */ {
             if msg.attachments.len() > 0 || msg.embeds.len() > 0 {
-                if let Err(why) = msg.react(&ctx.http, ReactionType::Unicode(String::from("😂"))).await {
-                    eprintln!("Error reacting to message by {}: {why:?}", msg.author.name);
-                }
+                add_vote_reactions(&ctx, &msg).await;
             }
+        }
+    }
+}
+
+async fn add_vote_reactions(ctx: &Context, msg: &Message) {
+    let reactions = [ReactionType::Custom {
+        animated: false,
+        id: EmojiId::new(1343553189508681728),
+        name: Some("upvote".to_string()),
+    }, ReactionType::Custom {
+        animated: false,
+        id: EmojiId::new(1343553212481015818),
+        name: Some("downvote".to_string()),
+    }];
+
+    for reaction in reactions {
+        if let Err(why) = msg.react(&ctx.http, reaction).await {
+            eprintln!("Error reacting to message by {}: {why:?}", msg.author.name);
         }
     }
 }
