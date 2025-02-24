@@ -56,7 +56,7 @@ async fn add_vote_reactions(ctx: &Context, msg: &Message) {
         name: Some("upvote".to_string()),
     }, ReactionType::Custom {
         animated: false,
-        id: EmojiId::new(1343553212481015818),
+        id: EmojiId::new(1343558658872709141),
         name: Some("downvote".to_string()),
     }];
 
