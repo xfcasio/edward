@@ -6,6 +6,10 @@ use serenity::{
     async_trait,
     prelude::*,
 };
+use poise::serenity_prelude as serenity;
+use anyhow::Result;
+
+mod fetch;
 
 const SHOWCASE_CHANNELS: [u64; 4] = [
     0677869233803100171  /* #showcase */,
@@ -14,14 +18,45 @@ const SHOWCASE_CHANNELS: [u64; 4] = [
     0788975142684459058  /* #github-showcase */
 ];
 
-struct Handler;
+pub struct Handler;
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let intents = GatewayIntents::GUILDS
+        | GatewayIntents::GUILD_MESSAGES
+        | GatewayIntents::DIRECT_MESSAGES
+        | GatewayIntents::MESSAGE_CONTENT;
+
+    let framework = poise::Framework::builder()
+        .options(poise::FrameworkOptions {
+            commands: vec![crate::fetch::fetch()],
+            ..Default::default()
+        })
+        .setup(|ctx, _ready, framework| {
+            Box::pin(async move {
+                poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                Ok(Handler)
+            })
+        })
+        .build();
+
+    let client = serenity::ClientBuilder::new(
+        obfstr!("TOKEN"),
+        intents
+    ).framework(framework)
+        .event_handler(Handler).await;
+
+    client?.start().await?;
+    Ok(())
+}
 
 #[async_trait]
 impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, _: Ready) {
         ctx.set_activity(
             Some(
-                ActivityData::streaming("swatting flies in cisco's basement", "https://twitch.tv/zzz").expect("MAKE_STREAMING_STATUS")
+                ActivityData::streaming("swatting flies in cisco's basement", "https://twitch.tv/zzz")
+                    .expect("MAKE_STREAMING_STATUS")
             )
         );
     }
@@ -64,22 +99,5 @@ async fn add_vote_reactions(ctx: &Context, msg: &Message) {
         if let Err(why) = msg.react(&ctx.http, reaction).await {
             eprintln!("Error reacting to message by {}: {why:?}", msg.author.name);
         }
-    }
-}
-
-#[tokio::main]
-async fn main() {
-    let intents = GatewayIntents::GUILD_MESSAGES
-        | GatewayIntents::DIRECT_MESSAGES
-        | GatewayIntents::MESSAGE_CONTENT;
-
-    let mut client =
-        Client::builder(
-            obfstr!("TOKEN"),
-            intents
-        ).event_handler(Handler).await.expect("Err creating client");
-
-    if let Err(why) = client.start().await {
-        println!("Client error: {why:?}");
     }
 }
