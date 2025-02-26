@@ -48,7 +48,7 @@ pub async fn fetch(
     } else if let Some(n) = lowest {
         (1, n)
     } else {
-        unreachable!()
+        return Ok(());
     };
 
     let target_channel_name = match channel_id.to_channel(&ctx.http()).await {
