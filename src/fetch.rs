@@ -101,7 +101,7 @@ async fn capture_channel_posts(ctx: &Context<'_>, channel_id: ChannelId, sorting
             Custom { id: reaction_id, .. } => {
                 reaction_id.get() == 1343553189508681728
             },
-            Unicode(emoji) => { emoji == "💙" },
+            Unicode(emoji) => { (emoji == "💙") || (emoji == "😂") },
             _ => unreachable!()
         }
     };
