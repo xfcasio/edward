@@ -34,11 +34,14 @@ pub async fn fetch(
     #[description = "Showcase channel to fetch posts from"]
     channel: ChannelOption,
 ) -> Result<(), anyhow::Error> {
-    ctx.defer().await?;
     if top.is_some() && lowest.is_some() {
-        ctx.say("You can only specify either 'top' or 'lowest', not both!").await?;
+        ctx.say("You can only specify either `top` or `lowest`, not both!").await?;
+        return Ok(());
+    } else if top.is_none() && lowest.is_none() {
+        ctx.say("You must specify either one of `top` or `lowest` (`<= 9` due to embed limit)").await?;
         return Ok(());
     }
+    ctx.defer().await?;
 
     let channel_id = ChannelId::new(channel as u64);
 
