@@ -44,7 +44,7 @@ async fn main() -> Result<()> {
         obfstr!("TOKEN"),
         intents
     ).framework(framework)
-        .event_handler(Handler).await;
+    .event_handler(Handler).await;
 
     client?.start().await?;
     Ok(())

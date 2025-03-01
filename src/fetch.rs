@@ -6,6 +6,7 @@ use serenity::{
     prelude::*,
 };
 use poise::CreateReply;
+use rayon::prelude::*;
 
 use crate::Handler;
 
@@ -116,7 +117,7 @@ async fn capture_channel_posts(ctx: &Context<'_>, channel_id: ChannelId, sorting
         }
     }
 
-    posts.sort_by_key(|m| sorting_coefficient * get_post_votes(&m));
+    posts.par_sort_by_key(|m| sorting_coefficient * get_post_votes(&m));
     posts
 }
 
