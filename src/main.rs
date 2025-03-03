@@ -11,11 +11,12 @@ use anyhow::Result;
 
 mod fetch;
 
-const SHOWCASE_CHANNELS: [u64; 4] = [
+const SHOWCASE_CHANNELS: [u64; 5] = [
     0677869233803100171  /* #showcase */,
     0964023097843937280  /* #wallpapers */,
     1294352242719068292  /* #books */,
-    0788975142684459058  /* #github-showcase */
+    0788975142684459058  /* #github-showcase */,
+    0660353693283123231  /* #memes */
 ];
 
 pub struct Handler;
@@ -71,14 +72,10 @@ impl EventHandler for Handler {
         if SHOWCASE_CHANNELS.contains(&msg.channel_id.get()) {
             if msg.attachments.len() > 0 || msg.embeds.len() > 0 || msg.content.contains("https://") {
                 add_vote_reactions(&ctx, &msg).await;
-            } else {
+            } else if msg.channel_id.get() != 660353693283123231 /* memes */ {
                 if let Err(why) = msg.delete(&ctx.http).await {
                     eprintln!("Error deleting message by {}: {why:?}", msg.author.name);
                 }
-            }
-        } else if msg.channel_id.get() == 660353693283123231 /* memes */ {
-            if msg.attachments.len() > 0 || msg.embeds.len() > 0 {
-                add_vote_reactions(&ctx, &msg).await;
             }
         }
     }
