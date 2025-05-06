@@ -81,7 +81,7 @@ pub async fn fetch(
             embeds.push(
                 CreateEmbed::new()
                     .title(format!("Author: {}", m.author.name))
-                    .description(format!("💙 likes - {}", get_post_votes(&m)))
+                    .description(format!("💙 likes • {}", get_post_votes(&m)))
                     .timestamp(m.timestamp)
                     .image(attachment.url.clone())
             );
