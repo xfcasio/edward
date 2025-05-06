@@ -1,6 +1,6 @@
 use obfstr::obfstr;
 use serenity::{
-    model::{channel::Message, gateway::Ready, id::EmojiId},
+    model::{channel::{Message, Reaction}, gateway::Ready, id::EmojiId},
     gateway::ActivityData,
     all::ReactionType,
     async_trait,
@@ -19,6 +19,10 @@ const SHOWCASE_CHANNELS: [u64; 5] = [
     0660353693283123231  /* #memes */
 ];
 
+const BLACKLISTED_REACTION_USERS: [u64; 1] = [
+    735569837522157629
+];
+
 pub struct Handler;
 
 #[tokio::main]
@@ -26,7 +30,8 @@ async fn main() -> Result<()> {
     let intents = GatewayIntents::GUILDS
         | GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::DIRECT_MESSAGES
-        | GatewayIntents::MESSAGE_CONTENT;
+        | GatewayIntents::MESSAGE_CONTENT
+        | GatewayIntents::GUILD_MESSAGE_REACTIONS;
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
@@ -77,6 +82,14 @@ impl EventHandler for Handler {
                     eprintln!("Error deleting message by {}: {why:?}", msg.author.name);
                 }
             }
+        }
+    }
+
+    async fn reaction_add(&self, ctx: Context, reaction: Reaction) {
+        let user_id = reaction.user_id.expect("FAILED_RETRIEVING_REACTION_USER").get();
+
+        if BLACKLISTED_REACTION_USERS.contains(&user_id) {
+            reaction.delete(&ctx.http).await.expect("FAILED_REMOVING_BLACKLISTED_USER_REACTION");
         }
     }
 }
