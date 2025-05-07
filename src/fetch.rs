@@ -77,15 +77,27 @@ pub async fn fetch(
     ];
 
     for m in (0..num).map(|i| messages.get(i as usize)).flatten() {
-        if let Some(attachment) = m.attachments.first() {
-            embeds.push(
-                CreateEmbed::new()
-                    .title(format!("Author: {}", m.author.name))
-                    .description(format!("💙 likes • {}", get_post_votes(&m)))
-                    .timestamp(m.timestamp)
-                    .image(attachment.url.clone())
-            );
+        let message_link = format!("https://discord.com/channels/{}/{}/{}",
+            match m.guild_id { Some(id) => format!("{id}"), None => "@me".to_owned() },
+            m.channel_id, m.id
+        );
+
+        let mut item = CreateEmbed::new()
+            .title(format!("Author: {}", m.author.name))
+            .timestamp(m.timestamp)
+            .description(format!("💙 likes • {}\n{message_link}", get_post_votes(&m)));
+
+        for embed in &m.embeds {
+            if let Some(embed_img) = &embed.image {
+                item = item.image(&embed_img.url);
+            }
         }
+        
+        for attachment in &m.attachments {
+            item = item.image(&attachment.url);
+        }
+
+        embeds.push(item);
     }
 
     let mut reply = CreateReply::default();
