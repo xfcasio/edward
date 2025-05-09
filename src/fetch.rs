@@ -74,6 +74,8 @@ pub async fn fetch(
             else { "Lowest rated" },
             target_channel_name
         ))
+        .image("https://media.discordapp.net/attachments/647997874940018710/1370271088151367741/image.png?ex=681ee3e5&is=681d9265&hm=2c89755338a02761d570bc19fa8a7362bbad7db100646bed8ab9b02f92d6f7e9&=&format=webp")
+        .color(0x111A1F)
     ];
 
     for m in (0..num).map(|i| messages.get(i as usize)).flatten() {
@@ -82,10 +84,17 @@ pub async fn fetch(
             m.channel_id, m.id
         );
 
+        let message_content_trimmed = if m.content.len() > 256 { &format!("{}...", &m.content[0..253]) }
+            else { &m.content };
+
         let mut item = CreateEmbed::new()
-            .title(format!("Author: {}", m.author.name))
+            .title(message_content_trimmed)
             .timestamp(m.timestamp)
-            .description(format!("💙 likes • {}\n{message_link}", get_post_votes(&m)));
+            .color(0xA175EB)
+            .description(format!("🪶 author •• {}\n💙 likes ••• {}\n🔗 link •••• {message_link}",
+                match &m.author.global_name { Some(name) => name, None => &m.author.name },
+                get_post_votes(&m)
+            ));
 
         for embed in &m.embeds {
             if let Some(embed_img) = &embed.image {
