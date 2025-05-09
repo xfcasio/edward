@@ -69,9 +69,10 @@ pub async fn fetch(
     let messages = capture_channel_posts(&ctx, channel_id, sorting_coefficient).await;
 
     let mut embeds = vec![CreateEmbed::new()
-        .title(format!("{} posts in #{}",
-            if sorting_coefficient == -1 { "Top rated" }
-            else { "Lowest rated" },
+        .title(format!("{} {} posts in #{}",
+            if sorting_coefficient == -1 { "Top" }
+            else { "Lowest" },
+            num,
             target_channel_name
         ))
         .image("https://media.discordapp.net/attachments/647997874940018710/1370271088151367741/image.png?ex=681ee3e5&is=681d9265&hm=2c89755338a02761d570bc19fa8a7362bbad7db100646bed8ab9b02f92d6f7e9&=&format=webp")
