@@ -75,6 +75,7 @@ pub async fn fetch(
             num,
             target_channel_name
         ))
+        .thumbnail("https://cdn.discordapp.com/icons/647981638348832790/0449935cebf16998c890e0b16af0e6a0.webp")
         .image("https://media.discordapp.net/attachments/647997874940018710/1370271088151367741/image.png?ex=681ee3e5&is=681d9265&hm=2c89755338a02761d570bc19fa8a7362bbad7db100646bed8ab9b02f92d6f7e9&=&format=webp")
         .color(0x111A1F)
     ];
@@ -91,6 +92,11 @@ pub async fn fetch(
         let mut item = CreateEmbed::new()
             .title(message_content_trimmed)
             .timestamp(m.timestamp)
+            .thumbnail(
+                format!("https://cdn.discordapp.com/avatars/{}/{}.webp",
+                    m.author.id.get(), m.author.avatar.expect("FAILED_GETTING_USER_AVATAR_HASH").to_string()
+                )
+            )
             .color(0xA175EB)
             .description(format!("🪶 author •• {}\n💙 likes ••• {}\n🔗 link •••• {message_link}",
                 match &m.author.global_name { Some(name) => name, None => &m.author.name },
