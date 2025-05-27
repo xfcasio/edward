@@ -2,7 +2,7 @@
     <img src="./assets/rhbot.png" width=150, height=150 />
 </div>
 
-<h1 align='center'> Linux Eden Bot </h1>
+<h1 align='center'> Edward </h1>
 
 <div align="center">
     <h3> The Discord bot I wrote to manage the Eden Discord server. </h2>
