@@ -8,6 +8,7 @@
 <div align="center">
     <h3> The Discord bot I wrote to manage the Eden Discord server. </h2>
 </div>
+<br/>
 
 <div align="center">
     <img src="./assets/show1.png" />
