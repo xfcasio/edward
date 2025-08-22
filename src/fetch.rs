@@ -13,7 +13,8 @@ use crate::Handler;
 pub type Context<'a> = poise::Context<'a, Handler, anyhow::Error>;
 
 #[derive(Debug, poise::ChoiceParameter)]
-enum ChannelOption {
+enum ChannelOption
+{
     #[name = "#🍙-showcase"] Showcase     = 0677869233803100171,
     #[name = "#📷-wallpapers"] Wallpapers = 0964023097843937280,
     #[name = "#📜-books"] Books           = 1294352242719068292,
@@ -125,7 +126,8 @@ pub async fn fetch(
 }
 
 
-async fn capture_channel_posts(ctx: &Context<'_>, channel_id: ChannelId, sorting_coefficient: isize) -> Vec<Message> {
+async fn capture_channel_posts(ctx: &Context<'_>, channel_id: ChannelId, sorting_coefficient: isize) -> Vec<Message>
+{
     let mut posts: Vec<Message> = vec![];
     
     let is_post = |r: &MessageReaction| -> bool {
