@@ -12,12 +12,13 @@ use anyhow::{anyhow, Result};
 
 mod fetch;
 
-const SHOWCASE_CHANNELS: [u64; 5] = [
+const SHOWCASE_CHANNELS: [u64; 6] = [
     0677869233803100171  /* #showcase */,
     0964023097843937280  /* #wallpapers */,
     1294352242719068292  /* #books */,
     0788975142684459058  /* #github-showcase */,
-    0660353693283123231  /* #memes */
+    0660353693283123231  /* #memes */,
+    1431695114807410809  /* #hall-of-fame */
 ];
 
 const BLACKLISTED_REACTION_USERS: [u64; 1] = [
