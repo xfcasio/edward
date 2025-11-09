@@ -20,7 +20,7 @@ enum ChannelOption
     #[name = "#📜-books"] Books           = 1294352242719068292,
     #[name = "#memes"] Memes              = 660353693283123231,
     #[name = "#github-showcase"] GithubShowcase = 0788975142684459058,
-    #[name = "#⚜️-hall-of-fame"] HallOfFame = 1431695114807410809, 
+    // #[name = "#⚜️-hall-of-fame"] HallOfFame = 1431695114807410809, 
 }
 
 #[poise::command(slash_command)]
