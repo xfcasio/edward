@@ -6,8 +6,9 @@
 ##
 
 <div align="center">
-    <h3> The Discord bot I wrote to manage the Eden Discord server. </h2>
+    <h3> The Discord bot I wrote to manage the Auralis Sylva Discord server. </h3>
 </div>
+<br/>
 <br/>
 
 <div align="center">
