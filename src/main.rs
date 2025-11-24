@@ -12,13 +12,18 @@ use anyhow::{anyhow, Result};
 
 mod fetch;
 
-const SHOWCASE_CHANNELS: [u64; 6] = [
+// add vote reactions to posts and remove non-posts
+const SHOWCASE_CHANNELS: [u64; 5] = [
     0677869233803100171  /* #showcase */,
     0964023097843937280  /* #wallpapers */,
     1294352242719068292  /* #books */,
     0788975142684459058  /* #github-showcase */,
-    0660353693283123231  /* #memes */,
     1431695114807410809  /* #hall-of-fame */
+];
+
+// add vote reactions to posts only
+const VOTE_CHANNELS: [u64; 1] = [
+    0660353693283123231  /* #memes */,
 ];
 
 const BLACKLISTED_REACTION_USERS: [u64; 1] = [
@@ -79,9 +84,20 @@ impl EventHandler for Handler
         }
 
         if SHOWCASE_CHANNELS.contains(&msg.channel_id.get()) {
-            if msg.attachments.len() > 0 || msg.embeds.len() > 0 || msg.content.contains("https://") {
-                add_vote_reactions(&ctx, &msg).await;
-            } else if msg.channel_id.get() != 660353693283123231 /* memes */ {
+            let is_post = msg.attachments.len() > 0
+                || msg.embeds.len() > 0
+                || msg.content.starts_with("https://");
+
+            let is_post = is_post && !(
+                msg.embeds.len() == 1 &&
+                msg.embeds[0].url
+                    .as_deref()
+                    .unwrap_or_default()
+                    .starts_with("https://cdn.discordapp.com/emojis")
+            );
+
+            if is_post { add_vote_reactions(&ctx, &msg).await; }
+            else if !VOTE_CHANNELS.contains(&msg.channel_id.get()) {
                 if let Err(why) = msg.delete(&ctx.http).await {
                     eprintln!("Error deleting message by {}: {why:?}", msg.author.name);
                 }
