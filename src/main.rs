@@ -83,7 +83,7 @@ impl EventHandler for Handler
             }
         }
 
-        if SHOWCASE_CHANNELS.contains(&msg.channel_id.get()) {
+        if SHOWCASE_CHANNELS.contains(&msg.channel_id.get()) || VOTE_CHANNELS.contains(&msg.channel_id.get()) {
             let is_post = msg.attachments.len() > 0
                 || msg.embeds.len() > 0
                 || msg.content.starts_with("https://");
