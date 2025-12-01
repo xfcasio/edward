@@ -8,6 +8,12 @@ use poise::serenity_prelude as serenity;
 /// allowing us to break down work into disjoint blocks.
 pub trait StaticMessageProcessor { async fn process(&self, _: &Context, _: &Message) {} }
 pub trait DynamicMessageProcessor { async fn process(&self, _: &mut Context, _: &Message) {} }
+pub trait ModerationMessageProcessor {
+    async fn process(&self, _: &mut Context, _: &Message) -> Propagation { Propagation::Propagate }
+}
+
+#[derive(PartialEq)]
+pub enum Propagation { Propagate, Stop }
 
 pub struct StaticMessageProcessorList<F, Ps: StaticMessageProcessor>(F, Ps);
 impl<F: AsyncFn (&Context, &Message), Ps: StaticMessageProcessor> StaticMessageProcessor for StaticMessageProcessorList<F, Ps>
@@ -29,21 +35,32 @@ impl<F: AsyncFn (&mut Context, &Message), Ps: DynamicMessageProcessor> DynamicMe
     }
 }
 
+pub struct ModerationMessageProcessorList<F, Ps: ModerationMessageProcessor>(F, Ps);
+impl<F: AsyncFn (&mut Context, &Message) -> Propagation, Ps: ModerationMessageProcessor> ModerationMessageProcessor for ModerationMessageProcessorList<F, Ps>
+{
+    async fn process(&self, ctx: &mut Context, msg: &Message) -> Propagation
+    {
+        if self.0(ctx, msg).await == Propagation::Propagate {
+            self.1.process(ctx, msg).await;
+        }
+
+        Propagation::Stop
+    }
+}
+
 /// End marker for the heterogeneous-list
 pub struct SentinelMessageProcessor;
 impl StaticMessageProcessor for SentinelMessageProcessor {}
 impl DynamicMessageProcessor for SentinelMessageProcessor {}
+impl ModerationMessageProcessor for SentinelMessageProcessor {}
 
 /// Type-safe api for scheduling message interaction systems.
 /// Execution order policy: Moderation systems -> Dynamic systems -> Static systems
 pub struct PriorityGroup<
-    ModerationMessageProcessors: DynamicMessageProcessor,
+    ModerationMessageProcessors: ModerationMessageProcessor,
     DynamicMessageProcessors: DynamicMessageProcessor,
     StaticMessageProcessors: StaticMessageProcessor,
 > {
-    // TODO(cisco): as of now there is no type-safety mechanism to
-    // prevent adding moderation systems as dynamic systems
-
     /// Read/Reply/React/Delete perms on the input Message.
     pub moderation: ModerationMessageProcessors,
 
@@ -67,17 +84,17 @@ impl PriorityGroup<SentinelMessageProcessor, SentinelMessageProcessor, SentinelM
 }
 
 impl<
-    ModerationMessageProcessors: DynamicMessageProcessor,
+    ModerationMessageProcessors: ModerationMessageProcessor,
     DynamicMessageProcessors: DynamicMessageProcessor,
     StaticMessageProcessors: StaticMessageProcessor,
 >
     PriorityGroup<ModerationMessageProcessors, DynamicMessageProcessors, StaticMessageProcessors>
 {
-    pub fn with_moderation_system<F: AsyncFn (&mut Context, &Message)>(self, system: F)
-        -> PriorityGroup<DynamicMessageProcessorList<F, ModerationMessageProcessors>, DynamicMessageProcessors, StaticMessageProcessors>
+    pub fn with_moderation_system<F: AsyncFn (&mut Context, &Message) -> Propagation>(self, system: F)
+        -> PriorityGroup<ModerationMessageProcessorList<F, ModerationMessageProcessors>, DynamicMessageProcessors, StaticMessageProcessors>
     {
         PriorityGroup {
-            moderation: DynamicMessageProcessorList(system, self.moderation),
+            moderation: ModerationMessageProcessorList(system, self.moderation),
             dynamic: self.dynamic,
             r#static: self.r#static
         }
@@ -105,7 +122,7 @@ impl<
 
     pub async fn start(self, mut ctx: Context, msg: Message)
     {
-        self.moderation.process(&mut ctx, &msg).await;
+        if self.moderation.process(&mut ctx, &msg).await == Propagation::Stop { return; };
         self.dynamic.process(&mut ctx, &msg).await;
         self.r#static.process(&ctx, &msg).await;
     }

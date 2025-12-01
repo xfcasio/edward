@@ -7,7 +7,8 @@ use serenity::{
 use poise::serenity_prelude as serenity;
 use anyhow::{anyhow, Result};
 
-use crate::{SHOWCASE_CHANNELS, VOTE_CHANNELS};
+use crate::{group_system, SHOWCASE_CHANNELS, VOTE_CHANNELS};
+use group_system::Propagation;
 
 /// DynamicMessageProcessor
 pub async fn rizz_ping(ctx: &mut Context, msg: &Message)
@@ -20,7 +21,7 @@ pub async fn rizz_ping(ctx: &mut Context, msg: &Message)
 }
 
 /// DynamicMessageProcessor
-pub async fn showcase_cleaner_and_voter(ctx: &mut Context, msg: &Message)
+pub async fn showcase_cleaner_and_voter(ctx: &mut Context, msg: &Message) -> Propagation
 {
     if SHOWCASE_CHANNELS.contains(&msg.channel_id.get()) || VOTE_CHANNELS.contains(&msg.channel_id.get()) {
         let is_post = msg.attachments.len() > 0
@@ -37,11 +38,15 @@ pub async fn showcase_cleaner_and_voter(ctx: &mut Context, msg: &Message)
 
         if is_post { add_vote_reactions(&ctx, &msg).await; }
         else if !VOTE_CHANNELS.contains(&msg.channel_id.get()) {
-            if let Err(why) = msg.delete(&ctx.http).await {
+            while let Err(why) = msg.delete(&ctx.http).await {
                 eprintln!("Error deleting message by {}: {why:?}", msg.author.name);
             }
+
+            return Propagation::Stop;
         }
     }
+
+    Propagation::Propagate
 }
 
 
