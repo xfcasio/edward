@@ -29,9 +29,10 @@ impl<F: AsyncFn (&mut Context, &Message), Ps: DynamicMessageProcessor> DynamicMe
     }
 }
 
-pub struct EndMessageProcessor;
-impl StaticMessageProcessor for EndMessageProcessor {}
-impl DynamicMessageProcessor for EndMessageProcessor {}
+/// End marker for the heterogeneous-list
+pub struct SentinelMessageProcessor;
+impl StaticMessageProcessor for SentinelMessageProcessor {}
+impl DynamicMessageProcessor for SentinelMessageProcessor {}
 
 /// Type-safe api for scheduling message interaction systems.
 /// Execution order policy: Moderation systems -> Dynamic systems -> Static systems
@@ -53,14 +54,14 @@ pub struct PriorityGroup<
     pub r#static: StaticMessageProcessors,
 }
 
-impl PriorityGroup<EndMessageProcessor, EndMessageProcessor, EndMessageProcessor>
+impl PriorityGroup<SentinelMessageProcessor, SentinelMessageProcessor, SentinelMessageProcessor>
 {
     pub fn new() -> Self
     {
         PriorityGroup {
-            moderation: const { EndMessageProcessor },
-            dynamic: const { EndMessageProcessor },
-            r#static: const { EndMessageProcessor }
+            moderation: const { SentinelMessageProcessor },
+            dynamic: const { SentinelMessageProcessor },
+            r#static: const { SentinelMessageProcessor }
         }
     }
 }
