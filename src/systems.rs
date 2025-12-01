@@ -12,7 +12,7 @@ use crate::{SHOWCASE_CHANNELS, VOTE_CHANNELS};
 /// DynamicMessageProcessor
 pub async fn rizz_ping(ctx: &mut Context, msg: &Message)
 {
-    if msg.content.contains("!rizz") || msg.content.contains("!Rizz") {
+    if msg.content.to_lowercase().contains("!rizz") {
         if let Err(why) = msg.channel_id.say(&ctx.http, "\\*looksmaxxes\\*").await {
             println!("Error sending message: {why:?}");
         }
