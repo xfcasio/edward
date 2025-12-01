@@ -16,7 +16,11 @@ pub trait ModerationMessageProcessor {
 pub enum Propagation { Propagate, Stop }
 
 pub struct StaticMessageProcessorList<F, Ps: StaticMessageProcessor>(F, Ps);
-impl<F: AsyncFn (&Context, &Message), Ps: StaticMessageProcessor> StaticMessageProcessor for StaticMessageProcessorList<F, Ps>
+impl<
+    F: AsyncFn (&Context, &Message),
+    Ps: StaticMessageProcessor
+>
+    StaticMessageProcessor for StaticMessageProcessorList<F, Ps>
 {
     async fn process(&self, ctx: &Context, msg: &Message)
     {
@@ -26,7 +30,11 @@ impl<F: AsyncFn (&Context, &Message), Ps: StaticMessageProcessor> StaticMessageP
 }
 
 pub struct DynamicMessageProcessorList<F, Ps: DynamicMessageProcessor>(F, Ps);
-impl<F: AsyncFn (&mut Context, &Message), Ps: DynamicMessageProcessor> DynamicMessageProcessor for DynamicMessageProcessorList<F, Ps>
+impl<
+    F: AsyncFn (&mut Context, &Message),
+    Ps: DynamicMessageProcessor
+>
+    DynamicMessageProcessor for DynamicMessageProcessorList<F, Ps>
 {
     async fn process(&self, ctx: &mut Context, msg: &Message)
     {
@@ -36,12 +44,16 @@ impl<F: AsyncFn (&mut Context, &Message), Ps: DynamicMessageProcessor> DynamicMe
 }
 
 pub struct ModerationMessageProcessorList<F, Ps: ModerationMessageProcessor>(F, Ps);
-impl<F: AsyncFn (&mut Context, &Message) -> Propagation, Ps: ModerationMessageProcessor> ModerationMessageProcessor for ModerationMessageProcessorList<F, Ps>
+impl<
+    F: AsyncFn (&mut Context, &Message) -> Propagation,
+    Ps: ModerationMessageProcessor
+>
+    ModerationMessageProcessor for ModerationMessageProcessorList<F, Ps>
 {
     async fn process(&self, ctx: &mut Context, msg: &Message) -> Propagation
     {
         if self.0(ctx, msg).await == Propagation::Propagate {
-            self.1.process(ctx, msg).await;
+            return self.1.process(ctx, msg).await;
         }
 
         Propagation::Stop
