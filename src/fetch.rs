@@ -51,9 +51,9 @@ pub async fn fetch(
 
     // maybe just messages[(len - N)..]
     let (sorting_coefficient, num, reply_partitions) = if let Some(n) = top {
-        (-1, n, (n / 10) as usize)
+        (-1, n, (n as f64 / 10.).ceil() as usize)
     } else if let Some(n) = lowest {
-        (1, n, (n / 10) as usize)
+        (1, n, (n as f64 / 10.).ceil() as usize)
     } else {
         return Ok(());
     };
@@ -136,7 +136,7 @@ pub async fn fetch(
 
     let replies = vec![CreateReply::default(); reply_partitions];
     for (mut reply, i) in replies.into_iter().zip(0..) {
-        reply.embeds = embeds[(10 * i)..(10 * i + 10)].to_vec();
+        reply.embeds = embeds.fallback_slice(10 * i, 10 * i + 10).to_vec();
         ctx.send(reply).await?;
     }
 
@@ -169,7 +169,8 @@ async fn capture_channel_posts(ctx: &Context<'_>, channel_id: ChannelId, sorting
     posts
 }
 
-fn get_post_votes(m: &Message) -> isize {
+fn get_post_votes(m: &Message) -> isize
+{
     let mut votes = 0isize;
 
     for r in &m.reactions {
@@ -191,3 +192,18 @@ fn get_post_votes(m: &Message) -> isize {
     votes
 }
 
+trait FallbackSlice<T>
+{
+    fn fallback_slice(&self, start: usize, end: usize) -> &[T];
+}
+
+impl<T> FallbackSlice<T> for [T]
+{
+    fn fallback_slice(&self, start: usize, end: usize) -> &[T]
+    {
+        if start >= self.len() { return &[]; }
+        if end >= self.len() { return &self[start..self.len()] }
+
+        &self[start..end]
+    }
+}
