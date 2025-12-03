@@ -2,11 +2,12 @@ use poise::serenity_prelude as serenity;
 use poise::futures_util::StreamExt;
 use serenity::all::{CreateEmbed, Channel};
 use serenity::{
-    model::{channel::{Message, ReactionType::{Custom, Unicode}, MessageReaction}, id::ChannelId},
+    model::{channel::{Message, Channel::Guild, ReactionType::{Custom, Unicode}, MessageReaction}, id::ChannelId},
     prelude::*,
 };
 use poise::CreateReply;
 use rayon::prelude::*;
+use anyhow::anyhow;
 
 use crate::Handler;
 
@@ -28,11 +29,11 @@ pub async fn fetch(
     ctx: Context<'_>,
     #[description = "Fetch top N posts"]
     #[min = 1]
-    top: Option<u32>,
+    top: Option<usize>,
 
     #[description = "Fetch lowest N posts"]
     #[min = 1]
-    lowest: Option<u32>,
+    lowest: Option<usize>,
 
     #[description = "Showcase channel to fetch posts from"]
     channel: ChannelOption,
@@ -41,7 +42,7 @@ pub async fn fetch(
         ctx.say("You can only specify either `top` or `lowest`, not both!").await?;
         return Ok(());
     } else if top.is_none() && lowest.is_none() {
-        ctx.say("You must specify either one of `top` or `lowest` (`<= 9` due to embed limit)").await?;
+        ctx.say("You must specify either one of `top` or `lowest`").await?;
         return Ok(());
     }
     ctx.defer().await?;
@@ -49,10 +50,10 @@ pub async fn fetch(
     let channel_id = ChannelId::new(channel as u64);
 
     // maybe just messages[(len - N)..]
-    let (sorting_coefficient, num) = if let Some(n) = top {
-        (-1, n)
+    let (sorting_coefficient, num, reply_partitions) = if let Some(n) = top {
+        (-1, n, (n / 10) as usize)
     } else if let Some(n) = lowest {
-        (1, n)
+        (1, n, (n / 10) as usize)
     } else {
         return Ok(());
     };
@@ -70,7 +71,23 @@ pub async fn fetch(
 
     let messages = capture_channel_posts(&ctx, channel_id, sorting_coefficient).await;
 
-    let mut embeds = vec![CreateEmbed::new()
+    if messages.len() < num {
+        let guild_id = match channel_id.to_channel(&ctx.http()).await {
+            Ok(Guild(channel)) => channel.guild_id,
+            _ => return Err(anyhow!("how did we get here?")),
+        };
+
+        let message_link = format!("https://discord.com/channels/{}/{}",
+            guild_id,
+            channel_id.get()
+        );
+
+        ctx.say(format!("{} only has {} posts.", message_link, messages.len())).await?;
+        return Ok(());
+    }
+
+    let mut embeds: Vec<CreateEmbed> = Vec::with_capacity(num);
+    embeds.push(CreateEmbed::new()
         .title(format!("{} {} posts in #{}",
             if sorting_coefficient == -1 { "Top" }
             else { "Lowest" },
@@ -79,8 +96,7 @@ pub async fn fetch(
         ))
         .thumbnail("https://cdn.discordapp.com/icons/647981638348832790/0449935cebf16998c890e0b16af0e6a0.webp")
         .image("https://media.discordapp.net/attachments/647997874940018710/1370271088151367741/image.png?ex=681ee3e5&is=681d9265&hm=2c89755338a02761d570bc19fa8a7362bbad7db100646bed8ab9b02f92d6f7e9&=&format=webp")
-        .color(0x111A1F)
-    ];
+        .color(0x111A1F));
 
     for m in (0..num).map(|i| messages.get(i as usize)).flatten() {
         let message_link = format!("https://discord.com/channels/{}/{}/{}",
@@ -118,10 +134,11 @@ pub async fn fetch(
         embeds.push(item);
     }
 
-    let mut reply = CreateReply::default();
-    reply.embeds = embeds;
-
-    ctx.send(reply).await?;
+    let replies = vec![CreateReply::default(); reply_partitions];
+    for (mut reply, i) in replies.into_iter().zip(0..) {
+        reply.embeds = embeds[(10 * i)..(10 * i + 10)].to_vec();
+        ctx.send(reply).await?;
+    }
 
     Ok(())
 }
