@@ -1,6 +1,6 @@
 <div align="center">
     <img src="./assets/rhbot.png" width=150, height=150 />
-    <img src="https://readme-typing-svg.demolab.com/?font=Cartograph%20CF%20Italic&weight=700&size=56&duration=1000&pause=0&color=6791C9&background=000A0E&center=true&vCenter=true&width=400&height=150&repeat=false&lines=Edward">
+    <img src="https://readme-typing-svg.demolab.com/?font=Parisienne&size=80&duration=1000&pause=0&color=6791C9&background=000A0E&center=true&vCenter=true&width=400&height=150&repeat=false&lines=Edward">
 </div>
 
 ##
