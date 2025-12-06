@@ -107,14 +107,16 @@ pub async fn fetch(
         let message_content_trimmed = if m.content.len() > 256 { &format!("{}...", &m.content[0..253]) }
             else { &m.content };
 
+        let user_pfp = m.author.avatar_url()
+            .unwrap_or(
+                "https://cdn.discordapp.com/icons/647981638348832790/63e727f0267f9b2baf17b745650bf5f4.webp?size=4096"
+                    .to_string()
+            );
+
         let mut item = CreateEmbed::new()
             .title(message_content_trimmed)
             .timestamp(m.timestamp)
-            .thumbnail(
-                format!("https://cdn.discordapp.com/avatars/{}/{}.webp",
-                    m.author.id.get(), m.author.avatar.expect("FAILED_GETTING_USER_AVATAR_HASH").to_string()
-                )
-            )
+            .thumbnail(user_pfp)
             .color(0xA175EB)
             .description(format!("🪶 author •• {}\n💙 likes ••• {}\n🔗 link •••• {message_link}",
                 match &m.author.global_name { Some(name) => name, None => &m.author.name },
