@@ -29,11 +29,16 @@ pub async fn showcase_cleaner_and_voter(ctx: &mut Context, msg: &Message) -> Pro
             || msg.content.starts_with("https://");
 
         let is_post = is_post && !(
-            msg.embeds.len() == 1 &&
-            msg.embeds[0].url
-                .as_deref()
-                .unwrap_or_default()
-                .starts_with("https://cdn.discordapp.com/emojis")
+            msg.embeds.iter().all(|embed| {
+                embed.url
+                    .as_deref()
+                    .unwrap_or_default()
+                    .starts_with("https://cdn.discordapp.com/emojis") ||
+                embed.url
+                    .as_deref()
+                    .unwrap_or_default()
+                    .contains("tenor.com")
+            })
         );
 
         if is_post { add_vote_reactions(&ctx, &msg).await; }
