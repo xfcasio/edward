@@ -43,7 +43,7 @@ pub async fn download(
                 Err(e) => { ctx.say(format!("Error getting local download: {e}")).await?; }
             }
 
-            std::fs::remove_file(filename).expect("RM_ERROR")
+            std::fs::remove_file(filename);
         },
         Err(err) => { ctx.say(format!("{err}")).await?; }
 
