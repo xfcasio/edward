@@ -19,12 +19,19 @@ pub async fn download(
 
     #[description = "url of the youtube/instagram/etc.. video to download (with yt-dlp)"]
     url: String,
+
+    #[description = "whether or not to remove audio from the video. values: true/false. (default = false)"]
+    should_remove_audio: Option<bool>
 ) -> Result<(), anyhow::Error> {
     ctx.say("downloading..").await?;
 
     match download_video(&url)
     {
         Ok(filename) => {
+            if let Some(should_remove) = should_remove_audio {
+                if should_remove { remove_audio(&filename)?; }
+            }
+
             match CreateAttachment::path(filename.clone()).await
             {
                 Ok(attachment) => {
@@ -38,14 +45,14 @@ pub async fn download(
 
             std::fs::remove_file(filename).expect("RM_ERROR")
         },
-        Err(err) => { ctx.say(err).await?; }
+        Err(err) => { ctx.say(format!("{err}")).await?; }
 
     }
 
     Ok(())
 }
 
-fn download_video(url: &str) -> Result<String, String>
+fn download_video(url: &str) -> anyhow::Result<String>
 {
     let mut random_filename: String = (0..10)
         .map(|_| rng().sample(rand::distr::Alphanumeric) as char)
@@ -57,8 +64,29 @@ fn download_video(url: &str) -> Result<String, String>
         .args(["-o", &random_filename, url])
         .status()
     {
-        return Err(format!("yt-dlp error: {status}"));
+        return Err(anyhow!(format!("yt-dlp error: {status}")));
     }
 
     Ok(random_filename)
+}
+
+fn remove_audio(filename: &str) -> anyhow::Result<()>
+{
+    match Command::new("ffmpeg")
+        .args(["-i", filename, "-c", "copy", "-an", "extracted.mp4"])
+        .status()
+    {
+        Ok(_) => {
+            std::fs::remove_file(filename).expect("RM_ERROR");
+            std::fs::copy("extracted.mp4", filename).expect("COPY_ERROR");
+            std::fs::remove_file("extracted.mp4").expect("RM_ERROR")
+        },
+
+        Err(status) => {
+            std::fs::remove_file("extracted.mp4");
+            return Err(anyhow!(format!("ffmpeg error: {status}")));
+        }
+    }
+
+    Ok(())
 }
