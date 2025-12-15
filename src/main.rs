@@ -8,6 +8,7 @@ use serenity::{
 use poise::serenity_prelude as serenity;
 use anyhow::Result;
 
+mod download;
 mod fetch;
 mod group_system;
 mod systems;
@@ -26,8 +27,7 @@ const VOTE_CHANNELS: [u64; 1] = [
     0660353693283123231  /* #memes */,
 ];
 
-const BLACKLISTED_REACTION_USERS: [u64; 1] = [
-    735569837522157629
+const BLACKLISTED_REACTION_USERS: [u64; 0] = [
 ];
 
 pub struct Handler;
@@ -43,15 +43,13 @@ async fn main() -> Result<()>
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![crate::fetch::fetch()],
+            commands: vec![fetch::fetch(), download::download()],
             ..Default::default()
         })
-        .setup(|ctx, _ready, framework| {
-            Box::pin(async move {
-                poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                Ok(Handler)
-            })
-        })
+        .setup(|ctx, _ready, framework| Box::pin(async move {
+            poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+            Ok(Handler)
+        }))
         .build();
 
     let client = serenity::ClientBuilder::new(obfstr!("TOKEN"), intents)
