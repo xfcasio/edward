@@ -23,7 +23,7 @@ pub async fn download(
     #[description = "whether or not to remove audio from the video. values: true/false. (default = false)"]
     should_remove_audio: Option<bool>
 ) -> Result<(), anyhow::Error> {
-    ctx.say("downloading..").await?;
+    let reply_handle = ctx.say("downloading..").await?;
 
     match download_video(&url)
     {
@@ -39,8 +39,12 @@ pub async fn download(
                         .attachment(attachment);
 
                     ctx.send(reply).await?;
+                    reply_handle.delete(ctx).await?;
                 },
-                Err(e) => { ctx.say(format!("Error getting local download: {e}")).await?; }
+                Err(e) => {
+                    ctx.say("Rate limit reached, consider touching grass or taking a shower.").await?;
+                    eprintln!("Error getting local download: {e}");
+                }
             }
 
             std::fs::remove_file(filename);
@@ -77,9 +81,9 @@ fn remove_audio(filename: &str) -> anyhow::Result<()>
         .status()
     {
         Ok(_) => {
-            std::fs::remove_file(filename).expect("RM_ERROR");
-            std::fs::copy("extracted.mp4", filename).expect("COPY_ERROR");
-            std::fs::remove_file("extracted.mp4").expect("RM_ERROR")
+            std::fs::remove_file(filename);
+            std::fs::copy("extracted.mp4", filename);
+            std::fs::remove_file("extracted.mp4");
         },
 
         Err(status) => {

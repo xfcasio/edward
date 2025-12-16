@@ -29,6 +29,7 @@ pub async fn showcase_cleaner_and_voter(ctx: &mut Context, msg: &Message) -> Pro
             || msg.content.starts_with("https://");
 
         let is_post = is_post && !(
+            !msg.embeds.is_empty() &&
             msg.embeds.iter().all(|embed| {
                 embed.url
                     .as_deref()
