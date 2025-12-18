@@ -20,9 +20,9 @@ pub async fn download(
     #[description = "url of the youtube/instagram/etc.. video to download (with yt-dlp)"]
     url: String,
 
-    #[description = "whether or not to remove audio from the video. values: true/false. (default = false)"]
+    #[description = "whether or not to remove audio from the video. (default = False)"]
     should_remove_audio: Option<bool>
-) -> Result<(), anyhow::Error> {
+) -> anyhow::Result<()> {
     let reply_handle = ctx.say("downloading..").await?;
 
     match download_video(&url)
@@ -32,14 +32,14 @@ pub async fn download(
                 if should_remove { remove_audio(&filename)?; }
             }
 
-            match CreateAttachment::path(filename.clone()).await
+            match CreateAttachment::path(&filename).await
             {
                 Ok(attachment) => {
                     let reply = CreateReply::default()
+                        .content(format!("`{}`:", ctx.author().display_name()))
                         .attachment(attachment);
 
                     ctx.send(reply).await?;
-                    reply_handle.delete(ctx).await?;
                 },
                 Err(e) => {
                     ctx.say("Rate limit reached, consider touching grass or taking a shower.").await?;
@@ -53,15 +53,15 @@ pub async fn download(
 
     }
 
+
+    reply_handle.delete(ctx).await?;
+
     Ok(())
 }
 
 fn download_video(url: &str) -> anyhow::Result<String>
 {
-    let mut random_filename: String = (0..10)
-        .map(|_| rng().sample(rand::distr::Alphanumeric) as char)
-        .collect();
-
+    let mut random_filename: String = (0..10).map(|_| rng().sample(rand::distr::Alphanumeric) as char).collect();
     random_filename += ".mp4";
 
     if let Err(status) = Command::new("yt-dlp")
@@ -71,23 +71,39 @@ fn download_video(url: &str) -> anyhow::Result<String>
         return Err(anyhow!(format!("yt-dlp error: {status}")));
     }
 
+    match Command::new("ffmpeg")
+        .args(["-i", &random_filename, "extracted.webm"])
+        .status()
+    {
+        Ok(_) => {
+            std::fs::remove_file(&random_filename);
+            std::fs::copy("extracted.webm", &random_filename);
+            std::fs::remove_file("extracted.webm");
+        },
+
+        Err(status) => {
+            std::fs::remove_file("extracted.webm");
+            return Err(anyhow!(format!("ffmpeg error: {status}")));
+        }
+    }
+
     Ok(random_filename)
 }
 
 fn remove_audio(filename: &str) -> anyhow::Result<()>
 {
     match Command::new("ffmpeg")
-        .args(["-i", filename, "-c", "copy", "-an", "extracted.mp4"])
+        .args(["-i", filename, "-c", "copy", "-an", "extracted.webm"])
         .status()
     {
         Ok(_) => {
             std::fs::remove_file(filename);
-            std::fs::copy("extracted.mp4", filename);
-            std::fs::remove_file("extracted.mp4");
+            std::fs::copy("extracted.webm", filename);
+            std::fs::remove_file("extracted.webm");
         },
 
         Err(status) => {
-            std::fs::remove_file("extracted.mp4");
+            std::fs::remove_file("extracted.webm");
             return Err(anyhow!(format!("ffmpeg error: {status}")));
         }
     }

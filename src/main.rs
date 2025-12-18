@@ -1,4 +1,5 @@
 use obfstr::obfstr;
+use tokio::time::{sleep, Duration};
 use serenity::{
     model::{channel::{Message, Reaction}, gateway::Ready},
     gateway::ActivityData,
@@ -71,8 +72,10 @@ impl EventHandler for Handler
         ));
     }
 
-    async fn message(&self, ctx: Context, msg: Message)
+    async fn message(&self, ctx: Context, mut msg: Message)
     {
+        msg.debounce(&ctx).await;
+
         group_system::PriorityGroup::new()
             .with_moderation_system(systems::showcase_cleaner_and_voter)
             .with_dynamic_system(systems::rizz_ping)
@@ -86,6 +89,21 @@ impl EventHandler for Handler
 
         if BLACKLISTED_REACTION_USERS.contains(&user_id) {
             reaction.delete(&ctx.http).await.expect("FAILED_REMOVING_BLACKLISTED_USER_REACTION");
+        }
+    }
+}
+
+trait Debounce: Sized { async fn debounce(&mut self, ctx: &Context); }
+impl Debounce for Message
+{
+    async fn debounce(&mut self, ctx: &Context)
+    {
+        sleep(Duration::from_secs(2)).await;
+
+        match self.channel_id.message(&ctx.http, self.id).await
+        {
+            Ok(msg) => *self = msg,
+            Err(_) => return
         }
     }
 }
