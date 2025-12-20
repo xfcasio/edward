@@ -3,11 +3,12 @@
 use rand::prelude::*;
 use serenity::all::Attachment;
 use serenity::all::CreateAttachment;
-use std::process::Command;
 use rand::rng;
 use poise::serenity_prelude as serenity;
 use poise::CreateReply;
 use anyhow::anyhow;
+use tokio::process::Command;
+use tokio::fs;
 
 use crate::Handler;
 
@@ -25,11 +26,11 @@ pub async fn download(
 ) -> anyhow::Result<()> {
     let reply_handle = ctx.say("downloading..").await?;
 
-    match download_video(&url)
+    match download_video(&url).await
     {
         Ok(filename) => {
             if let Some(should_remove) = should_remove_audio {
-                if should_remove { remove_audio(&filename)?; }
+                if should_remove { remove_audio(&filename).await?; }
             }
 
             match CreateAttachment::path(&filename).await
@@ -47,7 +48,7 @@ pub async fn download(
                 }
             }
 
-            std::fs::remove_file(filename);
+            fs::remove_file(filename).await;
         },
         Err(err) => { ctx.say(format!("{err}")).await?; }
 
@@ -59,7 +60,7 @@ pub async fn download(
     Ok(())
 }
 
-fn download_video(url: &str) -> anyhow::Result<String>
+async fn download_video(url: &str) -> anyhow::Result<String>
 {
     let mut random_filename: String = (0..10).map(|_| rng().sample(rand::distr::Alphanumeric) as char).collect();
     random_filename += ".mp4";
@@ -67,6 +68,7 @@ fn download_video(url: &str) -> anyhow::Result<String>
     if let Err(status) = Command::new("yt-dlp")
         .args(["-o", &random_filename, url])
         .status()
+        .await
     {
         return Err(anyhow!(format!("yt-dlp error: {status}")));
     }
@@ -74,15 +76,16 @@ fn download_video(url: &str) -> anyhow::Result<String>
     match Command::new("ffmpeg")
         .args(["-i", &random_filename, "extracted.webm"])
         .status()
+        .await
     {
         Ok(_) => {
-            std::fs::remove_file(&random_filename);
-            std::fs::copy("extracted.webm", &random_filename);
-            std::fs::remove_file("extracted.webm");
+            fs::remove_file(&random_filename).await;
+            fs::copy("extracted.webm", &random_filename).await;
+            fs::remove_file("extracted.webm").await;
         },
 
         Err(status) => {
-            std::fs::remove_file("extracted.webm");
+            fs::remove_file("extracted.webm").await;
             return Err(anyhow!(format!("ffmpeg error: {status}")));
         }
     }
@@ -90,20 +93,21 @@ fn download_video(url: &str) -> anyhow::Result<String>
     Ok(random_filename)
 }
 
-fn remove_audio(filename: &str) -> anyhow::Result<()>
+async fn remove_audio(filename: &str) -> anyhow::Result<()>
 {
     match Command::new("ffmpeg")
         .args(["-i", filename, "-c", "copy", "-an", "extracted.webm"])
         .status()
+        .await
     {
         Ok(_) => {
-            std::fs::remove_file(filename);
-            std::fs::copy("extracted.webm", filename);
-            std::fs::remove_file("extracted.webm");
+            fs::remove_file(filename).await;
+            fs::copy("extracted.webm", filename).await;
+            fs::remove_file("extracted.webm").await;
         },
 
         Err(status) => {
-            std::fs::remove_file("extracted.webm");
+            fs::remove_file("extracted.webm").await;
             return Err(anyhow!(format!("ffmpeg error: {status}")));
         }
     }
