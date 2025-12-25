@@ -40,7 +40,10 @@ pub async fn download(
                         .content(format!("`{}`:", ctx.author().display_name()))
                         .attachment(attachment);
 
-                    ctx.send(reply).await?;
+                    if let Err(why) = ctx.send(reply).await
+                    {
+                        ctx.say(format!("{why}")).await?;
+                    }
                 },
                 Err(e) => {
                     ctx.say("Rate limit reached, consider touching grass or taking a shower.").await?;
