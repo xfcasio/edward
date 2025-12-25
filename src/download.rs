@@ -74,7 +74,9 @@ async fn download_video(url: &str) -> anyhow::Result<String>
     }
 
     match Command::new("ffmpeg")
-        .args(["-i", &random_filename, "extracted.webm"])
+        .args(["-i", &random_filename, "-c:v", "libvpx",
+            "-deadline", "good", "-cpu-used", "4", "-crf", "32",
+            "-threads", "2", "-an", "extracted.webm"])
         .status()
         .await
     {
