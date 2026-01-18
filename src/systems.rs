@@ -10,7 +10,7 @@ use anyhow::{anyhow, Result};
 use crate::{group_system, SHOWCASE_CHANNELS, VOTE_CHANNELS};
 use group_system::Propagation;
 
-/// DynamicMessageProcessor
+/// DynamicProcessor
 pub async fn rizz_ping(ctx: &mut Context, msg: &Message)
 {
     if msg.content.to_lowercase().contains("!rizz") {
@@ -20,7 +20,7 @@ pub async fn rizz_ping(ctx: &mut Context, msg: &Message)
     }
 }
 
-/// DynamicMessageProcessor
+/// DynamicProcessor
 pub async fn showcase_cleaner_and_voter(ctx: &mut Context, msg: &Message) -> Propagation
 {
     if SHOWCASE_CHANNELS.contains(&msg.channel_id.get()) || VOTE_CHANNELS.contains(&msg.channel_id.get()) {
