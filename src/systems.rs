@@ -1,13 +1,13 @@
 use std::future::Future;
 use serenity::{
-    model::{channel::Message, id::EmojiId},
+    model::{channel::{Message, Reaction}, id::EmojiId},
     all::ReactionType,
     prelude::*,
 };
 use poise::serenity_prelude as serenity;
 use anyhow::{anyhow, Result};
 
-use crate::{group_system, SHOWCASE_CHANNELS, VOTE_CHANNELS};
+use crate::{group_system, SHOWCASE_CHANNELS, VOTE_CHANNELS, BLACKLISTED_REACTION_USERS};
 use group_system::Propagation;
 
 /// DynamicProcessor
@@ -20,7 +20,7 @@ pub async fn rizz_ping(ctx: &mut Context, msg: &Message)
     }
 }
 
-/// DynamicProcessor
+/// ModerationProcessor
 pub async fn showcase_cleaner_and_voter(ctx: &mut Context, msg: &Message) -> Propagation
 {
     if SHOWCASE_CHANNELS.contains(&msg.channel_id.get()) || VOTE_CHANNELS.contains(&msg.channel_id.get()) {
@@ -50,6 +50,19 @@ pub async fn showcase_cleaner_and_voter(ctx: &mut Context, msg: &Message) -> Pro
 
             return Propagation::Stop;
         }
+    }
+
+    Propagation::Propagate
+}
+
+/// ModerationProcessor
+pub async fn block_blacklisted_reactors(ctx: &mut Context, reaction: &Reaction) -> Propagation
+{
+    let user_id = reaction.user_id.expect("FAILED_RETRIEVING_REACTION_USER").get();
+
+    if BLACKLISTED_REACTION_USERS.contains(&user_id) {
+        reaction.delete(&ctx.http).await.expect("FAILED_REMOVING_BLACKLISTED_USER_REACTION");
+        return Propagation::Stop;
     }
 
     Propagation::Propagate

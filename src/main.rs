@@ -85,11 +85,10 @@ impl EventHandler for Handler
 
     async fn reaction_add(&self, ctx: Context, reaction: Reaction)
     {
-        let user_id = reaction.user_id.expect("FAILED_RETRIEVING_REACTION_USER").get();
-
-        if BLACKLISTED_REACTION_USERS.contains(&user_id) {
-            reaction.delete(&ctx.http).await.expect("FAILED_REMOVING_BLACKLISTED_USER_REACTION");
-        }
+        group_system::PriorityGroup::new()
+            .with_moderation_system(systems::block_blacklisted_reactors)
+            .start(ctx, reaction)
+            .await;
     }
 }
 
