@@ -24,8 +24,9 @@ const SHOWCASE_CHANNELS: [u64; 5] = [
 ];
 
 // add vote reactions to posts only
-const VOTE_CHANNELS: [u64; 1] = [
+const VOTE_CHANNELS: [u64; 2] = [
     0660353693283123231  /* #memes */,
+    996403285667885197   /* #media */
 ];
 
 const BLACKLISTED_REACTION_USERS: [u64; 0] = [
